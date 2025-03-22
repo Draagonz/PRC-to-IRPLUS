@@ -139,75 +139,119 @@ def main():
     st.title("Hexadecimal Processor")
     st.write("Upload a text file containing hexadecimal values for processing.")
 
-    # File uploader
+    # Pre-fill the first text box with example input
+    example_input = """
+FileFormat=PRCTOOL
+Remote control descripe=:  
+keymap=universal
+  Device=Android Box
+  Brand=Dragon A. Box
+  Model=Mini Remote
+
+Button's counts=23
+0,POW=0051 54 87 21
+18,TV=0051 54 87 32
+20,FAV=0051 54 87 74
+27,VOL+=0051 54 87 23
+1,AV=0051 54 87 60
+30,CH+=0051 54 87 33
+28,VOL-=0051 54 87 24
+9,MUTE=0051 54 87 25
+29,CH-=0051 54 87 34
+3,MENU=0051 54 87 F
+2,EXIT=0051 54 87 48
+34,BACK=0051 54 87 48
+22,UP=0051 54 87 15
+13,APPS=0051 54 87 68
+23,LEFT=0051 54 87 17
+24,OK=0051 54 87 19
+25,RIGHT=0051 54 87 18
+26,DOWN=0051 54 87 16
+87,VOICE=0051 54 87 46
+99,HOME=0051 54 87 47
+100,AMAZON=0051 54 87 67
+101,YOUTUBE=0051 54 87 64
+102,NETFLIX=0051 54 87 63
+
+********device file end********
+"""
+
+    # First text box: Input file content
+    st.subheader("Input File Content")
+    input_content = st.text_area("Input File", value=example_input, height=300)
+
+    # File uploader with cancel option
     uploaded_file = st.file_uploader("Upload a file", type=["txt"])
-
     if uploaded_file is not None:
-        # Read the file content
-        text = uploaded_file.read().decode("utf-8")
+        input_content = uploaded_file.read().decode("utf-8")
 
-        # Extract Brand and Model from the text
-        brand, model = extract_brand_and_model(text)
-        st.write(f"Extracted Brand: {brand}")
-        st.write(f"Extracted Model: {model}")
+    # Cancel option
+    if st.button("Cancel Upload"):
+        uploaded_file = None
+        input_content = example_input
 
-        # Extract text between ',' and '='
-        extracted_texts = extract_text_between_comma_and_equal(text)
+    # Extract Brand and Model from the text
+    brand, model = extract_brand_and_model(input_content)
+    st.write(f"Extracted Brand: {brand}")
+    st.write(f"Extracted Model: {model}")
 
-        # Extract hex groups
-        hex_groups = extract_hex_groups(text)
+    # Extract text between ',' and '='
+    extracted_texts = extract_text_between_comma_and_equal(input_content)
 
-        # Prepare the output for the second script
-        output_lines = []
-        for i, group in enumerate(hex_groups):
-            # Zero-pad each hex value in the group
-            padded_group = [zero_pad_hex(hex_val) for hex_val in group]
-            # Join the group into a 24-bit hex value
-            hex_24bit = ''.join(padded_group)
-            # Get the corresponding extracted text (if available)
-            extracted_text = extracted_texts[i] if i < len(extracted_texts) else "N/A"
-            # Format the output line
-            output_line = f"{extracted_text}\t{hex_24bit}"
-            # Append to output lines
-            output_lines.append(output_line)
+    # Extract hex groups
+    hex_groups = extract_hex_groups(input_content)
 
-        # Process the extracted data using Script 2 logic
-        processed_lines = []
-        for line in output_lines:
-            # Find all 24-bit hex values in the line
-            matches = re.findall(r'\b[0-9A-Fa-f]{6}\b', line)
-            if matches:
-                # Process each 24-bit hex value and append the result after a TAB
-                for hex_value in matches:
-                    anhex = process_24bit_hex(hex_value)
-                    line = line.strip() + '\t' + anhex
+    # Prepare the output for the second script
+    output_lines = []
+    for i, group in enumerate(hex_groups):
+        # Zero-pad each hex value in the group
+        padded_group = [zero_pad_hex(hex_val) for hex_val in group]
+        # Join the group into a 24-bit hex value
+        hex_24bit = ''.join(padded_group)
+        # Get the corresponding extracted text (if available)
+        extracted_text = extracted_texts[i] if i < len(extracted_texts) else "N/A"
+        # Format the output line
+        output_line = f"{extracted_text}\t{hex_24bit}"
+        # Append to output lines
+        output_lines.append(output_line)
 
-                    # Split the 32-bit hex value into two 16-bit parts
-                    part1, part2 = split_32bit_hex_to_16bit(anhex)
-                    # Prefix with '0x' and separate with a space
-                    formatted_parts = f"0x{part1} 0x{part2}"
-                    line += f'\t{formatted_parts}\n'
-            processed_lines.append(line)
+    # Process the extracted data using Script 2 logic
+    processed_lines = []
+    for line in output_lines:
+        # Find all 24-bit hex values in the line
+        matches = re.findall(r'\b[0-9A-Fa-f]{6}\b', line)
+        if matches:
+            # Process each 24-bit hex value and append the result after a TAB
+            for hex_value in matches:
+                anhex = process_24bit_hex(hex_value)
+                line = line.strip() + '\t' + anhex
 
-        # Display processed results
-        st.subheader("Processed Results")
-        for line in processed_lines:
-            st.write(line)
+                # Split the 32-bit hex value into two 16-bit parts
+                part1, part2 = split_32bit_hex_to_16bit(anhex)
+                # Prefix with '0x' and separate with a space
+                formatted_parts = f"0x{part1} 0x{part2}"
+                line += f'\t{formatted_parts}\n'
+        processed_lines.append(line)
 
-        # Generate XML content
-        xml_content = generate_xml_content(processed_lines, brand, model)
+    # Second text box: Processed Results
+    st.subheader("Processed Results")
+    processed_results = "\n".join(processed_lines)
+    st.text_area("Processed Results", value=processed_results, height=300)
 
-        # Display XML content in a text box
-        st.subheader("Generated XML Content")
-        st.text_area("XML Content", value=xml_content, height=400)
+    # Generate XML content
+    xml_content = generate_xml_content(processed_lines, brand, model)
 
-        # Download button for XML content
-        st.download_button(
-            label="Download XML File",
-            data=xml_content,
-            file_name=f"{brand}-{model}.irplus",
-            mime="text/xml"
-        )
+    # Third text box: XML Result
+    st.subheader("Generated XML Content")
+    st.text_area("XML Result", value=xml_content, height=400)
+
+    # Download button for XML content
+    st.download_button(
+        label="Download XML File",
+        data=xml_content,
+        file_name=f"{brand}-{model}.irplus",
+        mime="text/xml"
+    )
 
 # Run the Streamlit app
 if __name__ == "__main__":
