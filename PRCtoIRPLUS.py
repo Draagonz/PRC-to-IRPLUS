@@ -136,7 +136,7 @@ def generate_xml_content(processed_lines, brand, model):
 # ============================================================
 
 def main():
-    st.title("Hexadecimal Processor")
+    st.title("A Tool to Convert PRC tool text file to IRPLUS file")
     st.write("Upload a text file containing hexadecimal values for processing.")
 
     # Pre-fill the first text box with example input
@@ -236,7 +236,7 @@ Button's counts=23
             processed_lines.append(line)
 
         # Second text box: Processed Results
-        st.subheader("Processed Results")
+        st.subheader("Hex Converted Results")
         processed_results = "\n".join(processed_lines)
         st.text_area("Processed Results", value=processed_results, height=300)
 
@@ -244,12 +244,12 @@ Button's counts=23
         xml_content = generate_xml_content(processed_lines, brand, model)
 
         # Third text box: XML Result
-        st.subheader("Generated XML Content")
+        st.subheader("Generated IRPLUS Text")
         st.text_area("XML Result", value=xml_content, height=400)
 
-        # Download button for XML content
+        # Download button for IRPLUS content
         st.download_button(
-            label="Download XML File",
+            label="Download IRPLUS File",
             data=xml_content,
             file_name=f"{brand}-{model}.irplus",
             mime="text/xml"
