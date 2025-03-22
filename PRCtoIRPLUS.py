@@ -101,21 +101,11 @@ def extract_brand_and_model(text):
     return brand, model
 
 # ============================================================
-# Function to Generate XML File
+# Function to Generate XML Content
 # ============================================================
 
-def generate_xml_file(processed_lines, brand, model):
-    """Generate an XML file from processed lines."""
-    # Define the base output file name dynamically
-    base_output_file = f"{brand}-{model}.irplus"
-    output_file = base_output_file
-
-    # Check if the file already exists and add a counter if necessary
-    counter = 1
-    while os.path.exists(output_file):
-        output_file = f"{brand}-{model}_{counter}.irplus"
-        counter += 1
-
+def generate_xml_content(processed_lines, brand, model):
+    """Generate XML content from processed lines."""
     # Prepare the XML content
     xml_content = [
         '<irplus>',
@@ -139,11 +129,7 @@ def generate_xml_file(processed_lines, brand, model):
     xml_content.append("  </device>")
     xml_content.append("</irplus>")
 
-    # Write the XML content to the output file
-    with open(output_file, "w") as file:
-        file.write("\n".join(xml_content))
-
-    return output_file
+    return "\n".join(xml_content)
 
 # ============================================================
 # Streamlit App
@@ -208,19 +194,20 @@ def main():
         for line in processed_lines:
             st.write(line)
 
-        # Generate XML file
-        if st.button("Generate XML File"):
-            output_file = generate_xml_file(processed_lines, brand, model)
-            st.success(f"File '{output_file}' has been created successfully with Brand='{brand}' and Model='{model}'.")
+        # Generate XML content
+        xml_content = generate_xml_content(processed_lines, brand, model)
 
-            # Provide a download link for the generated XML file
-            with open(output_file, "r") as file:
-                st.download_button(
-                    label="Download XML File",
-                    data=file,
-                    file_name=output_file,
-                    mime="text/xml"
-                )
+        # Display XML content in a text box
+        st.subheader("Generated XML Content")
+        st.text_area("XML Content", value=xml_content, height=400)
+
+        # Download button for XML content
+        st.download_button(
+            label="Download XML File",
+            data=xml_content,
+            file_name=f"{brand}-{model}.irplus",
+            mime="text/xml"
+        )
 
 # Run the Streamlit app
 if __name__ == "__main__":
