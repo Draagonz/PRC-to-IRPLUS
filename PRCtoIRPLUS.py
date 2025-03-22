@@ -84,6 +84,23 @@ def split_32bit_hex_to_16bit(hex_value):
     return part1, part2
 
 # ============================================================
+# Function to Extract Brand and Model from Text
+# ============================================================
+
+def extract_brand_and_model(text):
+    """Extract Brand and Model from text using 'Brand=' and 'Model=' patterns."""
+    brand_pattern = r'Brand=\s*([^\s]+)'
+    model_pattern = r'Model=\s*([^\s]+)'
+
+    brand_match = re.search(brand_pattern, text)
+    model_match = re.search(model_pattern, text)
+
+    brand = brand_match.group(1) if brand_match else "Brand"
+    model = model_match.group(1) if model_match else "ItemX"
+
+    return brand, model
+
+# ============================================================
 # Function to Generate XML File
 # ============================================================
 
@@ -143,6 +160,11 @@ def main():
         # Read the file content
         text = uploaded_file.read().decode("utf-8")
 
+        # Extract Brand and Model from the text
+        brand, model = extract_brand_and_model(text)
+        st.write(f"Extracted Brand: {brand}")
+        st.write(f"Extracted Model: {model}")
+
         # Extract text between ',' and '='
         extracted_texts = extract_text_between_comma_and_equal(text)
 
@@ -185,11 +207,6 @@ def main():
         st.subheader("Processed Results")
         for line in processed_lines:
             st.write(line)
-
-        # Input fields for Brand and Model
-        st.subheader("Generate XML File")
-        brand = st.text_input("Enter Brand", value="Brand")
-        model = st.text_input("Enter Model", value="ItemX")
 
         # Generate XML file
         if st.button("Generate XML File"):
