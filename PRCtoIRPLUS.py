@@ -190,68 +190,70 @@ Button's counts=23
         uploaded_file = None
         input_content = example_input
 
-    # Extract Brand and Model from the text
-    brand, model = extract_brand_and_model(input_content)
-    st.write(f"Extracted Brand: {brand}")
-    st.write(f"Extracted Model: {model}")
+    # Convert button to process the input
+    if st.button("Convert"):
+        # Extract Brand and Model from the text
+        brand, model = extract_brand_and_model(input_content)
+        st.write(f"Extracted Brand: {brand}")
+        st.write(f"Extracted Model: {model}")
 
-    # Extract text between ',' and '='
-    extracted_texts = extract_text_between_comma_and_equal(input_content)
+        # Extract text between ',' and '='
+        extracted_texts = extract_text_between_comma_and_equal(input_content)
 
-    # Extract hex groups
-    hex_groups = extract_hex_groups(input_content)
+        # Extract hex groups
+        hex_groups = extract_hex_groups(input_content)
 
-    # Prepare the output for the second script
-    output_lines = []
-    for i, group in enumerate(hex_groups):
-        # Zero-pad each hex value in the group
-        padded_group = [zero_pad_hex(hex_val) for hex_val in group]
-        # Join the group into a 24-bit hex value
-        hex_24bit = ''.join(padded_group)
-        # Get the corresponding extracted text (if available)
-        extracted_text = extracted_texts[i] if i < len(extracted_texts) else "N/A"
-        # Format the output line
-        output_line = f"{extracted_text}\t{hex_24bit}"
-        # Append to output lines
-        output_lines.append(output_line)
+        # Prepare the output for the second script
+        output_lines = []
+        for i, group in enumerate(hex_groups):
+            # Zero-pad each hex value in the group
+            padded_group = [zero_pad_hex(hex_val) for hex_val in group]
+            # Join the group into a 24-bit hex value
+            hex_24bit = ''.join(padded_group)
+            # Get the corresponding extracted text (if available)
+            extracted_text = extracted_texts[i] if i < len(extracted_texts) else "N/A"
+            # Format the output line
+            output_line = f"{extracted_text}\t{hex_24bit}"
+            # Append to output lines
+            output_lines.append(output_line)
 
-    # Process the extracted data using Script 2 logic
-    processed_lines = []
-    for line in output_lines:
-        # Find all 24-bit hex values in the line
-        matches = re.findall(r'\b[0-9A-Fa-f]{6}\b', line)
-        if matches:
-            # Process each 24-bit hex value and append the result after a TAB
-            for hex_value in matches:
-                anhex = process_24bit_hex(hex_value)
-                line = line.strip() + '\t' + anhex
+        # Process the extracted data using Script 2 logic
+        processed_lines = []
+        for line in output_lines:
+            # Find all 24-bit hex values in the line
+            matches = re.findall(r'\b[0-9A-Fa-f]{6}\b', line)
+            if matches:
+                # Process each 24-bit hex value and append the result after a TAB
+                for hex_value in matches:
+                    anhex = process_24bit_hex(hex_value)
+                    line = line.strip() + '\t' + anhex
 
-                # Split the 32-bit hex value into two 16-bit parts
-                part1, part2 = split_32bit_hex_to_16bit(anhex)
-                # Prefix with '0x' and separate with a space
-                formatted_parts = f"0x{part1} 0x{part2}"
-                line += f'\t{formatted_parts}\n'
-        processed_lines.append(line)
+                    # Split the 32-bit hex value into two 16-bit parts
+                    part1, part2 = split_32bit_hex_to_16bit(anhex)
+                    # Prefix with '0x' and separate with a space
+                    formatted_parts = f"0x{part1} 0x{part2}"
+                    line += f'\t{formatted_parts}\n'
+            processed_lines.append(line)
 
-    # Second text box: Processed Results
-    st.subheader("Processed Results")
-    processed_results = "\n".join(processed_lines)
-    st.text_area("Processed Results", value=processed_results, height=300)
+        # Second text box: Processed Results
+        st.subheader("Processed Results")
+        processed_results = "\n".join(processed_lines)
+        st.text_area("Processed Results", value=processed_results, height=300)
 
-    # Generate XML content
-    xml_content = generate_xml_content(processed_lines, brand, model)
+        # Generate XML content
+        xml_content = generate_xml_content(processed_lines, brand, model)
 
-    # Third text box: XML Result
-    st.subheader("Generated XML Content")
-    st.text_area("XML Result", value=xml_content, height=400)
+        # Third text box: XML Result
+        st.subheader("Generated XML Content")
+        st.text_area("XML Result", value=xml_content, height=400)
 
-    # Download button for XML content
-    st.download_button(
-        label="Download XML File",
-        data=xml_content,
-        file_name=f"{brand}-{model}.irplus",
-        mime="text/xml"
-    )
+        # Download button for XML content
+        st.download_button(
+            label="Download XML File",
+            data=xml_content,
+            file_name=f"{brand}-{model}.irplus",
+            mime="text/xml"
+        )
 
 # Run the Streamlit app
 if __name__ == "__main__":
